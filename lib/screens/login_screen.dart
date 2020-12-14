@@ -1,0 +1,140 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'welcome_screen.dart';
+import 'package:flash_chat/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:flash_chat/AuthenticationProvider.dart';
+import 'package:provider/provider.dart';
+
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _auth = FirebaseAuth.instance;
+  String email;
+  String password;
+  bool showPassword = false;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: ModalProgressHUD(
+        inAsyncCall: Provider.of<AuthenticationProvider>(context).showSpinner,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Flexible(
+                child: Hero(
+                  tag: 'logo',
+                  child: Container(
+                    height: 200.0,
+                    child: Image.asset('images/logo.png'),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 48.0,
+              ),
+              TextField(
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (value) {
+                    //Do something with the user input.
+                    email = value;
+                  },
+                  decoration:
+                      KinputField.copyWith(hintText: 'Enter your email')),
+              SizedBox(
+                height: 8.0,
+              ),
+              TextField(
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.emailAddress,
+                  obscureText: !showPassword,
+                  onChanged: (value) {
+                    //Do something with the user input.
+                    password = value;
+                  },
+                  decoration:
+                      KinputField.copyWith(hintText: 'Enter your password.')),
+              SizedBox(
+                height: 5.0,
+              ),
+              CheckboxListTile(
+                title: Text('Show Password'),
+                value: showPassword,
+                onChanged: (bool newvalue) {
+                  setState(() {
+                    showPassword = newvalue;
+                  });
+                  print(showPassword);
+                },
+              ),
+              SizedBox(
+                height: 24.0,
+              ),
+              MatButton(
+                color: Colors.lightBlueAccent,
+                name: 'Log In',
+                onpress: () async {
+                  //Go to login screen.
+                  // setState(() {
+                  //   showSpinner = true;
+                  // });
+                  // try {
+                  //   final user = await _auth.signInWithEmailAndPassword(
+                  //       email: email, password: password);
+                  //   print(user);
+                  //   if (user != null) {
+                  //     setState(() {
+                  //       showSpinner = false;
+                  //     });
+                  String mess = await Provider.of<AuthenticationProvider>(
+                          context,
+                          listen: false)
+                      .signIn(
+                    email: email,
+                    password: password,
+                  );
+                  if (mess == 'Signed in!') {
+                    Navigator.pushNamed(context, '/chat');
+                  } else {
+                    Alert(
+                      context: context,
+                      type: AlertType.error,
+                      title: "Wrong usename/password !",
+                      desc: "please re-enter username/password",
+                      buttons: [
+                        DialogButton(
+                          child: Text(
+                            "OK",
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          width: 120,
+                        )
+                      ],
+                    ).show();
+                  }
+                  //   }
+                  // } catch (e) {
+                  //   print(e);
+                  //   setState(() {
+                  //     showSpinner = false;
+                  //   });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
